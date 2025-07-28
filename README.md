@@ -1,6 +1,6 @@
 # PieQ_Employee_Attendance
 
-
+<pre>
 1.Create a data class and store employee details with :
         *id
         *first & last name
@@ -25,3 +25,4 @@
                                    }
 
                   Else invalid check-in               
+</pre>
