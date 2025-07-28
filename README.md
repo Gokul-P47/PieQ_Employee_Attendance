@@ -5,6 +5,7 @@
         *id
         *firstName & lastName
         *role
+       *Reporting to
 
 2.Store list of employee object  as EmployeeList
 
