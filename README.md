@@ -1,16 +1,16 @@
 # PieQ_Employee_Attendance
 
 <pre>
-1.Create a data class and store employee details with :
+1.Create a data class (Employee) and store employee details with :
         *id
-        *first & last name
-        *Role
+        *firstName & lastName
+        *role
 
-2.Store list of employee object  
+2.Store list of employee object  as EmployeeList
 
-3.Create check-in list for validation
+3.Create CheckInlist for validation
 
-4.create validate function with:
+4.create CheckIn function with:
       parameters(id,values of checkinlist)
       conditions : 
                     if given id matches the available employee's id
