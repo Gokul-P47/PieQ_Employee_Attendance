@@ -12,11 +12,16 @@
 
 4.create validate function with:
       parameters(id,values of checkinlist)
-      conditions : check whether given id matches the available employee's id
-                   && check whether the current id not in checkinlist
-
-                   if condition is true:
-                     checkin occurs and print the employee details 
-                     and add employee in checkin list with id and date & time
+      conditions : 
+                    if given id matches the available employee's id
+                           {
+                          if check whether the current id not in checkinlist
+                               {    
+                                          checkin occurs and print the employee details 
+                                          and add employee in checkin list with id and date & time
+                                   }else
+                                   {
+                                          employee already checked in
+                                   }
 
                   Else invalid check-in               
