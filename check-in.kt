@@ -1,5 +1,6 @@
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 data class Employee(
     val id: Int,
@@ -16,18 +17,27 @@ data class Attendance(
 )
 
 val employeeList= mutableListOf<Employee>()
-val checkInList=mutableListOf<Attendance>()
+val checkInList= mutableListOf<Attendance>()
 fun main(){
     addEmployees()
     while(true){
         println("1.Check In\t\t2.Print CheckIn List\t\t3.Exit")
         println("Enter your option")
-        val userOption=readln().toInt()
+        val userOption=readln().toIntOrNull()
+        if(userOption==null){
+            println("Invalid input")
+            continue
+        }
         when(userOption){
            1->{
                println("Enter Your Employee ID: ")
-               val empId=readln().toInt()
-               checkIn(empId)
+               val empId=readln().toIntOrNull()
+               if(empId!= null){
+                   checkIn(empId)
+               }
+               else{
+                   println("Invalid User Id")
+               }
            }
 
            2->{
@@ -36,18 +46,23 @@ fun main(){
            3->{
                break
            }
+            else->{
+                println("Invalid Option")
+            }
         }
+        println()
     }
 }
 
 fun checkIn(empId: Int){
-    if(validateCheckIn(empId)){
-        val currentDate= LocalDate.now()
-        val currentTime= LocalTime.now()
+    if(validateCheckIn(empId)) {
+        val currentDate = LocalDate.now()
+        val currentTime = LocalTime.now()
         checkInList.add(
-            Attendance(empId,currentDate,currentTime)
+            Attendance(empId, currentDate, currentTime)
         )
-        println("Check-in Successful! Employee ID: $empId ")
+        val employee = employeeList.find { it.id == empId }
+        println("Check-in Successful! Employee ID: $empId  Name: ${employee?.firstName} ${employee?.lastName}")
     }
 }
 
@@ -89,7 +104,8 @@ fun printCheckInList(){
             println("ID           : ${employee.id}")
             println("Name         : ${employee.firstName} ${employee.lastName}")
             println("Check-in date: ${attendance.checkInDate}")
-            println("Check-in time: ${attendance.checkInTime}")
+            val formatter= DateTimeFormatter.ofPattern("HH:mm:ss")
+            println("Check-in time: ${(attendance.checkInTime).format(formatter)}")
             println()
         }
     }
