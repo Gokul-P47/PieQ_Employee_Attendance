@@ -67,7 +67,7 @@ fun checkIn(empId: Int){
 }
 
 fun validateCheckIn(empId: Int):Boolean{
-    if(!employeeList.any { it.id == empId }){
+    if(!employeeExists(empId)){
         println("Invalid check-in. Employee ID not found!")
         return false;
     }
@@ -109,4 +109,8 @@ fun printCheckInList(){
             println()
         }
     }
+}
+
+fun employeeExists(empId: Int):Boolean{
+    return employeeList.any { it.id == empId }
 }
