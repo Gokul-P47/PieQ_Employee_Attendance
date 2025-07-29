@@ -1,29 +1,32 @@
 # PieQ_Employee_Attendance
 
-<pre>
+
 1.Create a data class (Employee) and store employee details with :
+   <pre>
         *id
         *firstName & lastName
         *role
-       *Reporting to
+        *Reporting to
+  </pre>
 
-2.Store list of employee object  as EmployeeList
+2.create class Attendance
+<pre>
+         *id
+         *checkinDateTime
+       </pre>
 
-3.Create CheckInlist for validation
+3.Store list of employee object  as EmployeeList
 
-4.create CheckIn function with:
-      parameters(id,values of checkinlist)
-      conditions : 
-                    if given id matches the available employee's id
-                           {
-                          if check whether the current id not in checkinlist
-                               {    
-                                          checkin occurs and print the employee details 
-                                          and add employee in checkin list with id and date & time
-                                   }else
-                                   {
-                                          employee already checked in
-                                   }
+4.Create CheckInlist for validation
 
-                  Else invalid check-in               
-</pre>
+5.checkIn(empId)
+   
+       *call validateCheckIn() to validate check in
+       *add empId to check in list
+       
+
+6.validateCheckIn(id,dateTime):boolean
+       
+       *Validate the user id
+       *verify whether the user already checked in or not
+      
