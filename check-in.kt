@@ -24,6 +24,10 @@ fun main(){
 }
 
 fun checkIn(empId: Int){
+    if(!employeeExists(empId)){
+        println("Employee id not found")
+        return
+    }
     val inputDateTime: LocalDateTime? = getDateTimeFromUserOrNow()
     if(inputDateTime!=null) {
         if(validateCheckIn(empId,inputDateTime)){
@@ -32,23 +36,18 @@ fun checkIn(empId: Int){
             )
             val employee = employeeList.find { it.id == empId }
             println("Check-in Successful!")
-            println("Employee ID: $empId  Name: ${employee?.firstName} ${employee?.lastName} DateTime: ${formatDateTime(inputDateTime)}")
+            val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+            println("Employee ID: $empId  Name: ${employee?.firstName} ${employee?.lastName} DateTime: ${inputDateTime.format(formatter)}")
         }
     }
 }
 
 fun validateCheckIn(empId: Int,inputDateTime: LocalDateTime):Boolean{
     var isValid: Boolean= true;
-    if(!employeeExists(empId)){
-        println("Employee ID not found!")
-        isValid= false
-    }
-    else {
-        val attendance= checkInList.find { it.id == empId }
-        if((attendance!=null) && (hasCheckedInOnDate(empId,inputDateTime))){
-            isValid=false
-            println("Employee has already checked in on ${inputDateTime.toLocalDate()}")
-        }
+    val attendance= checkInList.find { it.id == empId }
+    if((attendance!=null) && (hasCheckedInOnDate(empId,inputDateTime))){
+        isValid=false
+        println("Employee has already checked in on ${inputDateTime.toLocalDate()}")
     }
     return isValid
 }
@@ -66,7 +65,8 @@ fun printCheckInList(){
         if(employee!=null){
             println("ID           : ${employee.id}")
             println("Name         : ${employee.firstName} ${employee.lastName}")
-            println("Check-in dateTime: ${formatDateTime(attendance.checkInDateTime)}")
+            val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+            println("Check-in dateTime: ${(attendance.checkInDateTime).format(formatter)}")
             println()
         }
     }
@@ -152,9 +152,4 @@ fun displayMenuOptions(){
         }
         println()
     }
-}
-
-fun formatDateTime(dateTime: LocalDateTime): String{
-    val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-    return dateTime.format(formatter)
 }
