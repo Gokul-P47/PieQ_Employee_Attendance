@@ -1,32 +1,38 @@
-# PieQ_Employee_Attendance
+#  Employee Check-In(Kotlin)
 
+  This is a command-line project built using Kotlin to manage employee check-ins. It allows adding employees, recording attendance, and viewing check-in records in a clean and structured format.
 
-1.Create a data class (Employee) and store employee details with :
-   <pre>
-        *id
-        *firstName & lastName
-        *role
-        *Reporting to
-  </pre>
+## 1.EmployeeData class
+  To store Employee Details such as
+  *
+1. EmployeeService
+Handles everything related to employee data.
 
-2.create class Attendance
-<pre>
-         *id
-         *checkinDateTime
-       </pre>
+createEmployee()
+Adds a new employee to the system.
 
-3.Store list of employee object  as EmployeeList
+employeeExists(empId)
+Checks if an employee ID already exists.
 
-4.Create CheckInlist for validation
+getEmployee(empId)
+Retrieves a specific employee’s details.
 
-5.checkIn(empId)
+getEmployeeList()
+Returns a list of formatted employee details as strings.
+
+2. AttendanceService
+Manages employee check-ins and attendance validation.
+
+checkIn(empId, dateTime)
+Registers a check-in for a valid employee at the given date and time. Prevents duplicate check-ins for the same day.
+
+validateCheckIn(empId, dateTime)
+Checks whether the employee has already checked in on that date.
+
+getCheckInList()
+Returns a list of formatted check-in records as strings.
+
+getFormattedCheckInDetails(empId, dateTime)
+Returns a formatted string containing the employee's name and check-in timestamp for display.
+
    
-       *call validateCheckIn() to validate check in
-       *add empId to check in list
-       
-
-6.validateCheckIn(id,dateTime):boolean
-       
-       *Validate the user id
-       *verify whether the user already checked in or not
-      
