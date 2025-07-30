@@ -19,44 +19,44 @@ class EmployeeService {
     val employeeList = mutableListOf<Employee>()
 
     init {
-        addDummyEmployees()
+        addInitialEmployees()
     }
 
-    fun addDummyEmployees() {
+    fun addInitialEmployees() {
         employeeList.addAll(
             listOf(
                 Employee(101, "Gokul", "P", "Developer", "Bob John"),
                 Employee(102, "Mark", "Lee", "Developer", "Bob John"),
-                Employee(103, "Mark", "Lee", "Tester", "Bob John"),
+                Employee(103, "Jack", "Lee", "Tester", "Bob John"),
                 Employee(104, "Ashok", "Kumar", "Designer", "Bob John"),
                 Employee(105, "Bob", "John", "Manager", "CEO")
             )
         )
     }
 
-    fun addEmployee(empId: Int, empFirstName: String, empLastName: String, empRole: String, reporting: String) {
+    fun addEmployee(empId: Int, empFirstName: String, empLastName: String, empRole: String, reporting: String) : Boolean{
         if (employeeExists(empId)) {
-            println("Employee already exists with $empId")
-            return
+            return false    //Employee already exists
         }
         employeeList.add(Employee(empId, empFirstName, empLastName, empRole, reporting))
+        return true
     }
 
+    fun getEmployeesList(): List<String> {
+        val list = mutableListOf<String>()
 
-    fun showEmployeeList(){
-        println("----- Employees List -----")
-        if (employeeList.isEmpty()) {
-            println("No Employees added yet.")
-            return
+        if (!employeeList.isEmpty()) {
+            for (employee in employeeList) {
+                list.add("empID        : ${employee.id}")
+                list.add("Name         : ${employee.firstName} ${employee.lastName}")
+                list.add("Role         : ${employee.role}")
+                list.add("Reporting To : ${employee.reportingTo}")
+                list.add("")
+            }
         }
-
-        for (employee in employeeList) {
-            println("ID           : ${employee.id}")
-            println("Name         : ${employee.firstName} ${employee.lastName}")
-            println("Role         : ${employee.role}")
-            println("Reporting To : ${employee.reportingTo}\n")
-        }
+        return list
     }
+
     fun employeeExists(empId: Int): Boolean {
         return employeeList.any { it.id == empId }
     }
@@ -69,85 +69,60 @@ class EmployeeService {
 class AttendanceService(private val employeeService: EmployeeService) {
     private val checkInList = mutableListOf<Attendance>()
 
-    fun checkIn(empId: Int) {
-        if (!employeeService.employeeExists(empId)) {
-            println("Employee ID not found.")
-            return
+    fun checkIn(empId: Int, inputDateTime: LocalDateTime): Boolean {
+        if (!employeeService.employeeExists(empId)){
+                return false
         }
-
-        val inputDateTime = getDateTimeFromUserOrNow()
-        if (inputDateTime != null) {
-            if (validateCheckIn(empId, inputDateTime)) {
-                checkInList.add(Attendance(empId, inputDateTime))
-                val employee = employeeService.getEmployee(empId)
-                println("Check-in Successful!")
-                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-                println("ID: $empId | Name: ${employee?.firstName} ${employee?.lastName} | DateTime: ${inputDateTime.format(formatter)}")
-            }
-        }
-    }
-
-    fun validateCheckIn(empId: Int, inputDateTime: LocalDateTime): Boolean {
-        val hasCheckedIn = checkInList.any {
-            it.id == empId && it.checkInDateTime.toLocalDate() == inputDateTime.toLocalDate()
-        }
-        if (hasCheckedIn) {
-            println("Already checked in on ${inputDateTime.toLocalDate()}")
+        if (!validateCheckIn(empId, inputDateTime)) {
             return false
         }
+
+        checkInList.add(Attendance(empId, inputDateTime))
         return true
     }
 
-    fun printCheckInList() {
-        println("----- Check-In List -----")
-        if (checkInList.isEmpty()) {
-            println("No Check-ins.")
-            return
-        }
 
-        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-        for (attendance in checkInList) {
-            val employee = employeeService.getEmployee(attendance.id)
-            println("ID           : ${employee?.id}")
-            println("Name         : ${employee?.firstName} ${employee?.lastName}")
-            println("Check-in Time: ${attendance.checkInDateTime.format(formatter)}\n")
+    fun validateCheckIn(empId: Int, inputDateTime: LocalDateTime): Boolean {
+        val hasCheckedIn = checkInList.any {         //check whether already checked in today or not
+            it.id == empId && it.checkInDateTime.toLocalDate() == inputDateTime.toLocalDate()
         }
+        return !hasCheckedIn    //If already checked in means invalid check-in
     }
 
-    private fun getDateTimeFromUserOrNow(): LocalDateTime? {
-        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-        print("Enter date and time (dd-MM-yyyy HH:mm) or press Enter to use current: ")
-        val input = readln().trim()
+    fun getCheckInList(): List<String> {
+        val checkInStrings = mutableListOf<String>()
 
-        return if (input.isEmpty()) {
-            LocalDateTime.now()
-        } else {
-            try {
-                val dateTime = LocalDateTime.parse(input, formatter)
-                if (dateTime.isAfter(LocalDateTime.now())) {
-                    println("Future date-time not allowed.")
-                    null
-                } else dateTime
-            } catch (e: DateTimeException) {
-                println("Invalid format!")
-                null
+        if (!checkInList.isEmpty()) {
+            val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+
+            for (attendance in checkInList) {
+                val employee = employeeService.getEmployee(attendance.id)
+                if (employee != null) {
+                    checkInStrings.add("empID           : ${employee.id}")
+                    checkInStrings.add("Name         : ${employee.firstName} ${employee.lastName}")
+                    checkInStrings.add("Check-in Time: ${attendance.checkInDateTime.format(formatter)}")
+                    checkInStrings.add("")
+                }
             }
         }
+        return checkInStrings
     }
 }
+
+
 fun main() {
     val employeeService = EmployeeService()
     val attendanceService = AttendanceService(employeeService)
 
     while (true) {
-        println("\n1.Add Employee\t2.Check In\t3.Show Employee List\t4.Show Check-In List\t5.Exit")
+        println("\n1.Add Employee\t2.Check In\t3.Get Employees List\t4.Get Check-In List\t5.Exit")
         print("Choose an option: ")
         when (readln().toIntOrNull()) {
             1->{
-                println("Enter id: ")
+                println("Enter empId: ")
                 val empId=readln().toIntOrNull()
                 if(empId == null) {
-                    println("Invalid id")
+                    println("Invalid empId")
                     continue
                 }
                 println("First Name: ")
@@ -158,24 +133,49 @@ fun main() {
                 val empRole=readln()
                 println("Reporting To: ")
                 val reportingTo=readln()
-                employeeService.addEmployee(empId,empFirstName,empLastName,empRole,reportingTo)
-            }
-            2 -> {
-                print("Enter Your Employee ID: ")
-                val empId = readln().toIntOrNull()
-                if (empId != null) {
-                    attendanceService.checkIn(empId)
-                } else {
-                    println("Invalid ID input")
+                if(employeeService.addEmployee(empId,empFirstName,empLastName,empRole,reportingTo)){
+                    println("Employee added successfully")
+                    println("EmpId: $empId Name: $empFirstName $empLastName")
+                }
+                else{
+                    println("Employee already exists with EmpId : $empId")
                 }
             }
-            3->{
-                employeeService.showEmployeeList()
+            2 -> {
+                print("Enter Employee ID: ")
+                val empId = readln().toIntOrNull()
+                if (empId == null) {
+                    println("Invalid ID")
+                    continue
+                }
+
+                val inputDateTime = getDateTimeFromUserOrNow()
+                if (inputDateTime == null) {
+                    println("Invalid dateTime")
+                    continue
+                }
+
+                val success = attendanceService.checkIn(empId, inputDateTime)
+                if (success) {
+                    val employee: Employee?= employeeService.getEmployee(empId)
+                    val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+                    println("Check-in Successful! Employee Id: $empId Name: ${employee?.firstName} ${employee?.lastName} DateTime: ${inputDateTime.format(formatter)}")
+                } else {
+                    println("Check-in Failed.") //Either user already checked-in or invalid user id
+                }
+            }
+            3 -> {
+                println("----- Employee List -----")
+                val employeeEntries = employeeService.getEmployeesList()
+                employeeEntries.forEach { println(it) }
             }
 
             4 -> {
-                attendanceService.printCheckInList()
+                println("----- Check-In List -----")
+                val checkInEntries = attendanceService.getCheckInList()
+                checkInEntries.forEach { println(it) }
             }
+
 
             5 -> {
                 break
@@ -184,3 +184,22 @@ fun main() {
         }
     }
 }
+
+fun getDateTimeFromUserOrNow(): LocalDateTime? {
+    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+    print("Enter date and time (dd-MM-yyyy HH:mm) or press Enter to use current: ")
+    val input = readln().trim()
+    return if (input.isEmpty()) {
+        LocalDateTime.now()
+    } else {
+        try {
+            val dateTime = LocalDateTime.parse(input, formatter)
+            if (dateTime.isAfter(LocalDateTime.now())) {  //Future date time
+                null
+            } else dateTime
+        } catch (e: DateTimeException) {  //Invalid format
+            null
+        }
+    }
+}
+
