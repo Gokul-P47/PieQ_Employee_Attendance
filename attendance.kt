@@ -2,7 +2,7 @@ import java.time.DateTimeException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-data class Employee(
+data class EmployeeData(
     val id: Int,
     val firstName: String,
     val lastName: String,
@@ -10,13 +10,13 @@ data class Employee(
     val reportingTo: String
 )
 
-data class Attendance(
+data class AttendanceData(
     val id: Int,
     val checkInDateTime: LocalDateTime
 )
 
 class EmployeeService {
-    val employeeList = mutableListOf<Employee>() //To store employees
+    val employeeList = mutableListOf<EmployeeData>() //To store employees
 
     init {
         addInitialEmployees()
@@ -25,11 +25,11 @@ class EmployeeService {
     fun addInitialEmployees() {
         employeeList.addAll(
             listOf(
-                Employee(101, "Gokul", "P", "Developer", "Bob John"),
-                Employee(102, "Mark", "Lee", "Developer", "Bob John"),
-                Employee(103, "Jack", "Lee", "Tester", "Bob John"),
-                Employee(104, "Ashok", "Kumar", "Designer", "Bob John"),
-                Employee(105, "Bob", "John", "Manager", "CEO")
+                EmployeeData(101, "Gokul", "P", "Developer", "Bob John"),
+                EmployeeData(102, "Mark", "Lee", "Developer", "Bob John"),
+                EmployeeData(103, "Jack", "Lee", "Tester", "Bob John"),
+                EmployeeData(104, "Ashok", "Kumar", "Designer", "Bob John"),
+                EmployeeData(105, "Bob", "John", "Manager", "CEO")
             )
         )
     }
@@ -39,7 +39,7 @@ class EmployeeService {
         if (employeeExists(empId)) {
             return false    //Employee already exists
         }
-        employeeList.add(Employee(empId, empFirstName, empLastName, empRole, reporting))
+        employeeList.add(EmployeeData(empId, empFirstName, empLastName, empRole, reporting))
         return true
     }
 
@@ -62,13 +62,13 @@ class EmployeeService {
         return employeeList.any { it.id == empId }
     }
 
-    fun getEmployee(empId: Int): Employee? {   //Return Employee object
+    fun getEmployee(empId: Int): EmployeeData? {   //Return Employee object
         return employeeList.find { it.id == empId }
     }
 }
 
 class AttendanceService(private val employeeService: EmployeeService) {
-    private val checkInList = mutableListOf<Attendance>()
+    private val checkInList = mutableListOf<AttendanceData>()
 
     fun checkIn(empId: Int, inputDateTime: LocalDateTime): Boolean {
         if (!employeeService.employeeExists(empId)){
@@ -78,7 +78,7 @@ class AttendanceService(private val employeeService: EmployeeService) {
             return false     //Check whether the employee has already checked in today or not
         }
 
-        checkInList.add(Attendance(empId, inputDateTime))
+        checkInList.add(AttendanceData(empId, inputDateTime))
         return true
     }
 
@@ -99,7 +99,7 @@ class AttendanceService(private val employeeService: EmployeeService) {
             for (attendance in checkInList) {
                 val employee = employeeService.getEmployee(attendance.id)
                 if (employee != null) {
-                    checkInStrings.add("empID           : ${employee.id}")
+                    checkInStrings.add("empID        : ${employee.id}")
                     checkInStrings.add("Name         : ${employee.firstName} ${employee.lastName}")
                     checkInStrings.add("Check-in Time: ${attendance.checkInDateTime.format(formatter)}")
                     checkInStrings.add("")
@@ -151,14 +151,14 @@ fun main() {
                 }
 
                 val inputDateTime = getDateTimeFromUserOrNow()
-                if (inputDateTime == null) { 
+                if (inputDateTime == null) {
                     println("Invalid dateTime")
                     continue
                 }
 
                 val checkInStatus = attendanceService.checkIn(empId, inputDateTime)
                 if (checkInStatus) {
-                    val employee: Employee?= employeeService.getEmployee(empId)
+                    val employee: EmployeeData?= employeeService.getEmployee(empId)
                     val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
                     println("Check-in Successful! Employee Id: $empId Name: ${employee?.firstName} ${employee?.lastName} DateTime: ${inputDateTime.format(formatter)}")
                 } else {
