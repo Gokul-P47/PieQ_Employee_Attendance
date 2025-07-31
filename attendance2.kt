@@ -1,9 +1,11 @@
 import java.time.DateTimeException
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 data class EmployeeData(
-    val id: Int,
+    val id: String,
     val firstName: String,
     val lastName: String,
     val role: String,
@@ -11,14 +13,15 @@ data class EmployeeData(
 )
 
 data class AttendanceData(
-    val id: Int,
+    val id: String,
     val checkInDateTime: LocalDateTime,
     var checkOutDateTime: LocalDateTime? = null,
-    var totHrs:Long
+    var workingHrs: Duration?
 )
 
 
 class EmployeeService {
+    var serialNumber: Int=105
     val employeeList = mutableListOf<EmployeeData>() //To store employees
 
     init {
@@ -28,22 +31,25 @@ class EmployeeService {
     fun addInitialEmployees() {
         employeeList.addAll(
             listOf(
-                EmployeeData(101, "Gokul", "P", "Developer", "Bob John"),
-                EmployeeData(102, "Mark", "Lee", "Developer", "Bob John"),
-                EmployeeData(103, "Jack", "Lee", "Tester", "Bob John"),
-                EmployeeData(104, "Ashok", "Kumar", "Designer", "Bob John"),
-                EmployeeData(105, "Bob", "John", "Manager", "CEO")
+                EmployeeData("PieQ101", "Gokul", "P", "Developer", "Bob John"),
+                EmployeeData("PieQ102", "Mark", "Lee", "Developer", "Bob John"),
+                EmployeeData("PieQ103", "Jack", "Lee", "Tester", "Bob John"),
+                EmployeeData("PieQ104", "Ashok", "Kumar", "Designer", "Bob John"),
+                EmployeeData("PieQ105", "Bob", "John", "Manager", "CEO")
             )
         )
     }
 
     //Add new Employee
-    fun addEmployee(empId: Int, empFirstName: String, empLastName: String, empRole: String, reporting: String) : Boolean{
-        if (employeeExists(empId)) {
-            return false    //Employee already exists
-        }
+    fun addEmployee(empFirstName: String, empLastName: String, empRole: String, reporting: String) :String{
+        val empId:String= generateEmpId()
         employeeList.add(EmployeeData(empId, empFirstName, empLastName, empRole, reporting))
-        return true
+        return empId
+    }
+
+    fun generateEmpId():String{
+        serialNumber++;
+        return "PieQ$serialNumber"
     }
 
     fun getEmployeesList(): List<String> {
@@ -61,11 +67,11 @@ class EmployeeService {
         return list
     }
 
-    fun employeeExists(empId: Int): Boolean {
+    fun employeeExists(empId: String): Boolean {
         return employeeList.any { it.id == empId }
     }
 
-    fun getEmployee(empId: Int): EmployeeData? {   //Return Employee object
+    fun getEmployee(empId: String): EmployeeData? {   //Return Employee object
         return employeeList.find { it.id == empId }
     }
 }
@@ -73,55 +79,58 @@ class EmployeeService {
 class AttendanceService(private val employeeService: EmployeeService) {
     private val checkInList = mutableListOf<AttendanceData>()
 
-    fun checkIn(empId: Int, checkInDateTime: LocalDateTime): Boolean {
+    fun checkIn(empId: String, checkInDateTime: LocalDateTime): Boolean {
         if (!employeeService.employeeExists(empId)){
+            println("Employee ID not found")
             return false      //Employee not found with the given id
         }
         if (!validateCheckIn(empId, checkInDateTime)) {
+            println("Employee has already checked in")
             return false     //Check whether the employee has already checked in today or not
         }
 
-        checkInList.add(AttendanceData(empId, checkInDateTime,null,0))
+        checkInList.add(AttendanceData(empId, checkInDateTime,null,null))
         return true
     }
 
-    fun checkOut(empId: Int,checkOutDateTime: LocalDateTime):String?{
-        if (!employeeService.employeeExists(empId)){
-            return null      //Employee not found with the given id
-        }
-        val attendance: AttendanceData?= validateCheckOut(empId,checkOutDateTime)
-        if(attendance== null){
-            return null     //Invalid check-out
-        }
-
-        val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-
-        val totHrs= getHrsBetween(attendance.checkInDateTime,checkOutDateTime)
-        attendance.checkOutDateTime=checkOutDateTime
-        attendance.totHrs=totHrs
-        return "EmpId: $empId CheckInTime: ${attendance.checkInDateTime.format(formatter)} " +
-                "CheckOutTime: ${checkOutDateTime.format(formatter)} totHrs: $totHrs"
-
-    }
-
-
-    fun validateCheckIn(empId: Int, inputDateTime: LocalDateTime): Boolean {
+    fun validateCheckIn(empId: String, inputDateTime: LocalDateTime): Boolean {
         val hasCheckedIn = checkInList.any {         //check whether already checked in today or not
             it.id == empId && it.checkInDateTime.toLocalDate() == inputDateTime.toLocalDate()
         }
         return !hasCheckedIn    //If already checked in means invalid check-in
     }
 
-    fun validateCheckOut(empId: Int, checkOutDateTime: LocalDateTime): AttendanceData? {
+    fun checkOut(empId: String,checkOutDateTime: LocalDateTime):String?{
+        if (!employeeService.employeeExists(empId)){
+            println("Employee ID not found")
+            return null      //Employee not found with the given id
+        }
+        val attendance: AttendanceData?= validateCheckOut(empId,checkOutDateTime)
+        if(attendance== null){
+            println("No valid check-in yet")
+            return null     //Invalid check-out
+        }
+
+        val formatter= DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+
+        val totHrs= Duration.between(attendance.checkInDateTime,checkOutDateTime)
+        attendance.checkOutDateTime=checkOutDateTime
+        attendance.workingHrs=totHrs
+        return "EmpId: $empId CheckInTime: ${attendance.checkInDateTime.format(formatter)} " +
+                "CheckOutTime: ${checkOutDateTime.format(formatter)} workingHrs: ${totHrs.toHours()}h ${totHrs.toMinutes()}m"
+
+    }
+
+    fun validateCheckOut(empId: String, checkOutDateTime: LocalDateTime): AttendanceData? {
         val attendance:AttendanceData? =checkInList.find {
-                    it.id == empId &&
+            it.id == empId &&
                     it.checkInDateTime.toLocalDate() == checkOutDateTime.toLocalDate() &&
                     it.checkOutDateTime == null
         }
-        if(attendance==null || attendance.checkInDateTime.isAfter(checkOutDateTime)) return null
+        // Check whether check in time is greater than or equal to check out time in terms of day,hr,minutes ignoring seconds
+        if(attendance==null ||attendance.checkInDateTime.truncatedTo(ChronoUnit.MINUTES) >= checkOutDateTime.truncatedTo(ChronoUnit.MINUTES)) return null
         return attendance
     }
-
 
     fun getCheckInList(): List<String> {
         val checkInStrings = mutableListOf<String>()
@@ -137,20 +146,13 @@ class AttendanceService(private val employeeService: EmployeeService) {
                     checkInStrings.add("Check-in Time : ${attendance.checkInDateTime.format(formatter)}")
                     val checkOutFormatted = attendance.checkOutDateTime?.format(formatter) ?: "N/A"
                     checkInStrings.add("Check-out Time: $checkOutFormatted")
-                    checkInStrings.add("Total Hrs     : ${attendance.totHrs}")
+                    checkInStrings.add("Total Hrs     : ${attendance.workingHrs}")
                     checkInStrings.add("")
                 }
             }
         }
         return checkInStrings
     }
-
-    fun getHrsBetween(checkIn: LocalDateTime, checkOut: LocalDateTime): Long {
-        val duration = java.time.Duration.between(checkIn, checkOut)
-        val hours = duration.toHours()
-        return hours
-    }
-
 }
 
 
@@ -195,6 +197,7 @@ fun main() {
             }
             else -> println("Invalid option")
         }
+        println()
     }
 }
 
@@ -217,12 +220,6 @@ fun getDateTimeFromUserOrNow(): LocalDateTime? {
 }
 
 fun addEmployee(employeeService: EmployeeService){
-    println("Enter empId: ")
-    val empId=readln().toIntOrNull()
-    if(empId == null) {
-        println("Invalid empId")
-        return
-    }
     println("First Name: ")
     val empFirstName=readln()
     println("Last Name: ")
@@ -231,22 +228,14 @@ fun addEmployee(employeeService: EmployeeService){
     val empRole=readln()
     println("Reporting To: ")
     val reportingTo=readln()
-    if(employeeService.addEmployee(empId,empFirstName,empLastName,empRole,reportingTo)){
-        println("Employee added successfully")
-        println("EmpId: $empId Name: $empFirstName $empLastName")
-    }
-    else{
-        println("Employee already exists with EmpId : $empId")
-    }
+    val empId=employeeService.addEmployee(empFirstName,empLastName,empRole,reportingTo)
+    println("Employee added successfully")
+    println("EmpId: $empId Name: $empFirstName $empLastName")
 }
 
 fun checkIn(attendanceService:AttendanceService,employeeService:EmployeeService){
     print("Enter Employee ID: ")
-    val empId = readln().toIntOrNull()
-    if (empId == null) {
-        println("Invalid ID")
-        return
-    }
+    val empId = readln()
 
     val inputDateTime = getDateTimeFromUserOrNow()
     if (inputDateTime == null) {
@@ -266,11 +255,7 @@ fun checkIn(attendanceService:AttendanceService,employeeService:EmployeeService)
 
 fun checkOut(attendanceService:AttendanceService){
     print("Enter Employee ID: ")
-    val empId = readln().toIntOrNull()
-    if (empId == null) {
-        println("Invalid ID")
-        return
-    }
+    val empId = readln()
 
     val inputDateTime = getDateTimeFromUserOrNow()
     if (inputDateTime == null) {
